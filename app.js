@@ -4,7 +4,38 @@
 
 
 /* =========================
-   DATA
+   BASIC DATA
+========================= */
+
+const appContent =
+  document.getElementById("app-content");
+
+
+const navButtons =
+  document.querySelectorAll(".nav-button");
+
+
+/* =========================
+   SCHOOL TIMES
+========================= */
+
+const times = [
+  null,
+
+  ["1", "08:30", "09:15"],
+  ["2", "09:20", "10:05"],
+  ["3", "10:35", "11:20"],
+  ["4", "11:25", "12:10"],
+  ["5", "12:20", "13:05"],
+  ["6", "13:10", "13:55"],
+  ["7", "14:05", "14:50"],
+  ["8", "14:55", "15:40"],
+  ["9", "15:45", "16:30"]
+];
+
+
+/* =========================
+   SUBJECTS
 ========================= */
 
 const subjects = [
@@ -27,20 +58,6 @@ const subjects = [
 ];
 
 
-const times = [
-  ["", "", ""],
-  ["", "8:00", "8:45"],
-  ["", "8:50", "9:35"],
-  ["", "9:50", "10:35"],
-  ["", "10:40", "11:25"],
-  ["", "11:30", "12:15"],
-  ["", "12:20", "13:05"],
-  ["", "13:15", "14:00"],
-  ["", "14:05", "14:50"],
-  ["", "14:55", "15:40"]
-];
-
-
 /* =========================
    TIMETABLE
 ========================= */
@@ -48,96 +65,101 @@ const times = [
 const timetable = {
 
   1: [
-    "Mathematics",
-    "English",
     "Dějepis",
-    "Chemistry",
-    "French",
+    "History",
+    "Class Teacher Hour",
     "ZSV",
-    "PE",
+    "Mathematics",
+    "Czech",
     "Free",
-    "Free"
+    "English"
   ],
 
   2: [
-    "Czech",
+    "PE",
+    "PE",
+    "Dějepis",
+    "Physics",
     "Mathematics",
-    "History",
-    "Biology",
-    "English",
-    "Geography",
     "Free",
-    "Free",
-    "Free"
+    "Chemistry",
+    "French"
   ],
 
   3: [
-    "Physics",
-    "Mathematics",
-    "Czech",
-    "Integrated Science",
-    "French",
     "English",
+    "English",
+    "Biology",
+    "Geography",
+    "Czech",
+    "Czech",
     "Free",
-    "Free",
-    "Free"
+    "History",
+    "ZSV"
   ],
 
   4: [
-    "Economics / Business / Finance",
-    "Economics / Business / Finance",
-    "Economics / Business / Finance",
-    "Economics / Business / Finance",
-    "Economics / Business / Finance",
-    "Economics / Business / Finance",
-    "Economics / Business / Finance",
+    "Mathematics",
+    "Mathematics",
+    "French",
+    "Physics",
+    "Free",
+    "Free",
+    "Integrated Science",
     "Economics / Business / Finance",
     "Economics / Business / Finance"
   ],
 
   5: [
-    "English",
     "Czech",
-    "Mathematics",
-    "Geography",
+    "ICT",
+    "French",
+    "English",
+    "Chemistry",
     "Biology",
-    "Dějepis",
-    "PE",
     "Free",
-    "Free"
+    "Geography"
   ]
 
 };
 
 
 /* =========================
-   STORAGE
+   LOCAL STORAGE
 ========================= */
 
 let tasks =
-  JSON.parse(localStorage.getItem("schoolTasks")) || [];
+  JSON.parse(
+    localStorage.getItem("schoolOS_tasks") || "[]"
+  );
+
 
 let tests =
-  JSON.parse(localStorage.getItem("schoolTests")) || [];
+  JSON.parse(
+    localStorage.getItem("schoolOS_tests") || "[]"
+  );
+
 
 let events =
-  JSON.parse(localStorage.getItem("schoolEvents")) || [];
+  JSON.parse(
+    localStorage.getItem("schoolOS_events") || "[]"
+  );
 
 
 function saveData() {
 
   localStorage.setItem(
-    "schoolTasks",
+    "schoolOS_tasks",
     JSON.stringify(tasks)
   );
 
   localStorage.setItem(
-    "schoolTests",
+    "schoolOS_tests",
     JSON.stringify(tests)
   );
 
   localStorage.setItem(
-    "schoolEvents",
+    "schoolOS_events",
     JSON.stringify(events)
   );
 
@@ -145,25 +167,21 @@ function saveData() {
 
 
 /* =========================
-   DOM
-========================= */
-
-const appContent =
-  document.getElementById("app-content");
-
-const navButtons =
-  document.querySelectorAll(".nav-button");
-
-
-/* =========================
    HELPERS
 ========================= */
 
+function todayString() {
+
+  const date = new Date();
+
+  return date.toISOString().split("T")[0];
+
+}
+
+
 function formatDate(dateString) {
 
-  if (!dateString) {
-    return "";
-  }
+  if (!dateString) return "";
 
   const date =
     new Date(dateString + "T00:00:00");
@@ -182,117 +200,55 @@ function formatDate(dateString) {
 
 function daysUntil(dateString) {
 
-  const today = new Date();
+  const today =
+    new Date();
 
   today.setHours(0, 0, 0, 0);
 
-  const date =
+  const target =
     new Date(dateString + "T00:00:00");
 
+  target.setHours(0, 0, 0, 0);
+
   return Math.ceil(
-    (date - today) /
+    (target - today) /
     (1000 * 60 * 60 * 24)
   );
 
 }
 
 
-function getTodayDay() {
+function getDayNumber(date = new Date()) {
 
-  const day = new Date().getDay();
+  const day = date.getDay();
 
-  return day === 0 ? 7 : day;
+  if (day === 0) return 7;
 
-}
-
-
-function escapeHTML(value) {
-
-  const div =
-    document.createElement("div");
-
-  div.textContent =
-    value ?? "";
-
-  return div.innerHTML;
+  return day;
 
 }
 
 
-function emptyMessage(text) {
+function getTimeMinutes(time) {
 
-  return `
-    <div class="empty">
-      ${text}
-    </div>
-  `;
+  const [hours, minutes] =
+    time.split(":").map(Number);
 
-}
-
-
-/* =========================
-   NAVIGATION
-========================= */
-
-function setActive(page) {
-
-  navButtons.forEach(button => {
-
-    button.classList.toggle(
-      "active",
-      button.dataset.page === page
-    );
-
-  });
+  return hours * 60 + minutes;
 
 }
 
 
-function showPage(page) {
+function currentMinutes() {
 
-  setActive(page);
+  const now = new Date();
 
-  if (page === "home") {
-    renderHome();
-  }
-
-  if (page === "tasks") {
-    renderTasks();
-  }
-
-  if (page === "tests") {
-    renderTests();
-  }
-
-  if (page === "calendar") {
-    renderCalendar();
-  }
-
-  if (page === "timetable") {
-    renderTimetable();
-  }
-
-  if (page === "subjects") {
-    renderSubjects();
-  }
-
-}
-
-
-navButtons.forEach(button => {
-
-  button.addEventListener(
-    "click",
-    () => {
-
-      showPage(
-        button.dataset.page
-      );
-
-    }
+  return (
+    now.getHours() * 60 +
+    now.getMinutes()
   );
 
-});
+}
 
 
 /* =========================
@@ -301,11 +257,11 @@ navButtons.forEach(button => {
 
 function renderHome() {
 
-  const today =
+  const now =
     new Date();
 
   const hour =
-    today.getHours();
+    now.getHours();
 
   let greeting = "Good morning";
 
@@ -318,21 +274,182 @@ function renderHome() {
   }
 
 
-  const todayDay =
-    getTodayDay();
+  const day =
+    getDayNumber(now);
+
 
   const todaySchedule =
-    timetable[todayDay] || [];
+    timetable[day] || [];
 
 
-  const activeTasks =
-    tasks.filter(
-      task => !task.completed
+  const current =
+    currentMinutes();
+
+
+  let currentIndex = -1;
+  let nextIndex = -1;
+
+
+  todaySchedule.forEach(
+    (subject, index) => {
+
+      const time =
+        times[index + 1];
+
+      if (!time) return;
+
+      const start =
+        getTimeMinutes(time[1]);
+
+      const end =
+        getTimeMinutes(time[2]);
+
+
+      if (
+        current >= start &&
+        current < end
+      ) {
+        currentIndex = index;
+      }
+
+
+      if (
+        nextIndex === -1 &&
+        current < start
+      ) {
+        nextIndex = index;
+      }
+
+    }
+  );
+
+
+  let currentSubject = "School day";
+
+  let currentTime = "No class right now";
+
+
+  if (currentIndex !== -1) {
+
+    currentSubject =
+      todaySchedule[currentIndex];
+
+    const time =
+      times[currentIndex + 1];
+
+    currentTime =
+      `${time[1]}–${time[2]}`;
+
+  }
+
+
+  let nextHTML =
+    `<div class="empty">No more classes today.</div>`;
+
+
+  if (nextIndex !== -1) {
+
+    const subject =
+      todaySchedule[nextIndex];
+
+    const time =
+      times[nextIndex + 1];
+
+
+    nextHTML = `
+
+      <div class="next-card">
+
+        <div>
+
+          <div class="next-label">
+            Next
+          </div>
+
+          <div class="next-subject">
+            ${subject}
+          </div>
+
+        </div>
+
+        <div class="next-time">
+          ${time[1]}–${time[2]}
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  const tomorrow =
+    new Date();
+
+  tomorrow.setDate(
+    tomorrow.getDate() + 1
+  );
+
+
+  let tomorrowHTML = "";
+
+
+  if (
+    tomorrow.getDay() !== 0 &&
+    tomorrow.getDay() !== 6
+  ) {
+
+    const tomorrowDay =
+      getDayNumber(tomorrow);
+
+    const tomorrowSchedule =
+      timetable[tomorrowDay] || [];
+
+
+    tomorrowSchedule.forEach(
+      (subject, index) => {
+
+        const time =
+          times[index + 1];
+
+        tomorrowHTML += `
+
+          <div class="tomorrow-item">
+
+            <div class="tomorrow-subject">
+              ${subject}
+            </div>
+
+            <div class="tomorrow-time">
+              ${time[1]}–${time[2]}
+            </div>
+
+          </div>
+
+        `;
+
+      }
     );
+
+  }
+
+
+  if (!tomorrowHTML) {
+
+    tomorrowHTML =
+      `<div class="empty">
+        No school tomorrow.
+      </div>`;
+
+  }
 
 
   const upcomingTests =
-    [...tests]
+    tests
+      .filter(test =>
+        !test.completed &&
+        daysUntil(test.date) >= 0
+      )
       .sort(
         (a, b) =>
           new Date(a.date) -
@@ -341,86 +458,96 @@ function renderHome() {
       .slice(0, 3);
 
 
-  let tomorrowDay =
-    todayDay + 1;
+  let testsHTML = "";
 
-  if (tomorrowDay > 5) {
-    tomorrowDay = 1;
+
+  upcomingTests.forEach(test => {
+
+    const days =
+      daysUntil(test.date);
+
+
+    let countdown =
+      `${days} days left`;
+
+    if (days === 0) {
+      countdown = "Today";
+    }
+
+    if (days === 1) {
+      countdown = "Tomorrow";
+    }
+
+
+    testsHTML += `
+
+      <div class="test-item">
+
+        <div class="item-main">
+
+          <div class="item-title">
+            ${test.subject}
+          </div>
+
+          <div class="item-meta">
+            ${test.topic}
+          </div>
+
+        </div>
+
+        <div class="countdown">
+          ${countdown}
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+
+  if (!testsHTML) {
+
+    testsHTML =
+      `<div class="empty">
+        No upcoming tests.
+      </div>`;
+
   }
 
 
-  const tomorrowSchedule =
-    timetable[tomorrowDay] || [];
+  const pendingTasks =
+    tasks.filter(
+      task => !task.completed
+    );
 
 
-  const scheduleHTML =
-    todaySchedule.map(
-      (subject, index) => {
-
-        if (subject === "Free") {
-          return "";
-        }
-
-        const time =
-          times[index + 1];
-
-        if (!time) {
-          return "";
-        }
-
-        return `
-          <div class="next-card">
-
-            <div>
-
-              <div class="next-label">
-                ${time[1]}–${time[2]}
-              </div>
-
-              <div class="next-subject">
-                ${escapeHTML(subject)}
-              </div>
-
-            </div>
-
-          </div>
-        `;
-
-      }
-    ).join("");
+  const completedTasks =
+    tasks.filter(
+      task => task.completed
+    );
 
 
-  const tomorrowHTML =
-    tomorrowSchedule.map(
-      (subject, index) => {
+  const totalTasks =
+    tasks.length;
 
-        if (subject === "Free") {
-          return "";
-        }
 
-        const time =
-          times[index + 1];
+  const progress =
+    totalTasks === 0
+      ? 0
+      : Math.round(
+          completedTasks.length /
+          totalTasks *
+          100
+        );
 
-        if (!time) {
-          return "";
-        }
 
-        return `
-          <div class="tomorrow-item">
-
-            <div class="tomorrow-subject">
-              ${escapeHTML(subject)}
-            </div>
-
-            <div class="tomorrow-time">
-              ${time[1]}–${time[2]}
-            </div>
-
-          </div>
-        `;
-
-      }
-    ).join("");
+  const totalStudyMinutes =
+    tests.reduce(
+      (sum, test) =>
+        sum + Number(test.time || 0),
+      0
+    );
 
 
   appContent.innerHTML = `
@@ -432,21 +559,22 @@ function renderHome() {
       </h1>
 
       <p>
-        Everything you need for school, in one place.
+        Here's everything you need for today.
       </p>
+
 
       <div class="quick-actions">
 
         <button onclick="openTaskModal()">
-          + Add Task
+          + Add task
         </button>
 
         <button onclick="openTestModal()">
-          + Add Test
+          + Add test
         </button>
 
         <button onclick="openEventModal()">
-          + Add Event
+          + Add event
         </button>
 
       </div>
@@ -456,65 +584,84 @@ function renderHome() {
 
     <div class="dashboard-grid">
 
-      <section class="card">
-
-        <h2>
-          Today
-        </h2>
-
-        <p class="card-subtitle">
-          Your schedule for today.
-        </p>
-
-        <div class="now-card">
-
-          <div class="now-label">
-            ${todaySchedule.length ? "School day" : "No classes"}
-          </div>
-
-          <div class="now-subject">
-            ${todaySchedule.filter(
-              subject => subject !== "Free"
-            ).length} classes
-          </div>
-
-          <div class="now-time">
-            ${today.toLocaleDateString(
-              "en-GB",
-              {
-                weekday: "long",
-                day: "numeric",
-                month: "long"
-              }
-            )}
-          </div>
-
-        </div>
-
-        ${scheduleHTML ||
-          emptyMessage("No classes today.")}
-
-      </section>
-
 
       <div>
 
+
         <section class="card">
+
+          <h2>
+            Today
+          </h2>
+
+          <p class="card-subtitle">
+            Your school day
+          </p>
+
+
+          <div class="now-card">
+
+            <div class="now-label">
+              Now
+            </div>
+
+            <div class="now-subject">
+              ${currentSubject}
+            </div>
+
+            <div class="now-time">
+              ${currentTime}
+            </div>
+
+          </div>
+
+
+          ${nextHTML}
+
+        </section>
+
+
+        <section
+          class="card"
+          style="margin-top:20px"
+        >
 
           <h2>
             Tomorrow
           </h2>
 
           <p class="card-subtitle">
-            A quick look at what's coming.
+            A quick look ahead
           </p>
 
           <div class="tomorrow-list">
 
-            ${
-              tomorrowHTML ||
-              emptyMessage("No classes tomorrow.")
-            }
+            ${tomorrowHTML}
+
+          </div>
+
+        </section>
+
+
+      </div>
+
+
+      <div>
+
+
+        <section class="card">
+
+          <h2>
+            Upcoming tests
+          </h2>
+
+          <p class="card-subtitle">
+            Don't let them sneak up on you.
+          </p>
+
+          <div class="item-list">
+
+            ${testsHTML}
 
           </div>
 
@@ -527,46 +674,68 @@ function renderHome() {
         >
 
           <h2>
-            Overview
+            This week
           </h2>
 
           <p class="card-subtitle">
-            Your school life at a glance.
+            Your school progress
           </p>
+
 
           <div class="progress-box">
 
             <div class="progress-label">
 
               <span>
-                Open tasks
+                Tasks completed
               </span>
 
-              <strong>
-                ${activeTasks.length}
-              </strong>
+              <span>
+                ${completedTasks.length}/${totalTasks}
+              </span>
+
+            </div>
+
+
+            <div class="progress-track">
+
+              <div
+                class="progress-fill"
+                style="width:${progress}%"
+              ></div>
 
             </div>
 
           </div>
 
-          <div class="progress-box">
 
-            <div class="progress-label">
+          <div
+            style="
+              margin-top:20px;
+              color:#858a95;
+              font-size:13px;
+            "
+          >
 
-              <span>
-                Upcoming tests
-              </span>
+            ${pendingTasks.length}
+            task${pendingTasks.length === 1 ? "" : "s"}
+            remaining
 
-              <strong>
-                ${upcomingTests.length}
-              </strong>
+            <br><br>
 
-            </div>
+            ${tests.length}
+            test${tests.length === 1 ? "" : "s"}
+            planned
+
+            <br><br>
+
+            ${Math.round(totalStudyMinutes / 60 * 10) / 10}
+            hours of study planned
 
           </div>
 
         </section>
+
 
       </div>
 
@@ -596,76 +765,58 @@ function renderTasks() {
 
   sortedTasks.forEach(task => {
 
-    const days =
+    const due =
       daysUntil(task.due);
 
 
-    let countdown =
-      "";
+    let dueText =
+      `${due} days left`;
 
-    if (task.completed) {
+    if (due === 0) {
+      dueText = "Due today";
+    }
 
-      countdown =
-        "Completed";
+    if (due === 1) {
+      dueText = "Due tomorrow";
+    }
 
-    } else if (days < 0) {
-
-      countdown =
-        "Overdue";
-
-    } else if (days === 0) {
-
-      countdown =
-        "Due today";
-
-    } else if (days === 1) {
-
-      countdown =
-        "Due tomorrow";
-
-    } else {
-
-      countdown =
-        `${days} days`;
-
+    if (due < 0) {
+      dueText = "Overdue";
     }
 
 
     html += `
 
       <div
-        class="task-item
-        ${task.completed ? "completed" : ""}"
+        class="
+          task-item
+          ${task.completed ? "completed" : ""}
+        "
       >
 
         <input
-          type="checkbox"
           class="check-task"
+          type="checkbox"
           ${task.completed ? "checked" : ""}
           onchange="toggleTask('${task.id}')"
         >
 
+
         <div class="item-main">
 
           <div class="item-title">
-            ${escapeHTML(task.name)}
+            ${task.name}
           </div>
 
           <div class="item-meta">
 
             <span class="badge">
-              ${escapeHTML(task.type)}
+              ${task.type}
             </span>
 
-            ${
-              task.subject
-                ? `<span class="badge">
-                    ${escapeHTML(task.subject)}
-                   </span>`
-                : ""
-            }
+            ${task.subject || "Other"}
 
-            ${formatDate(task.due)}
+            · ${formatDate(task.due)}
 
             · ${task.time} min
 
@@ -673,22 +824,45 @@ function renderTasks() {
 
         </div>
 
+
         <div class="countdown">
-          ${countdown}
+          ${dueText}
         </div>
 
-        <button
-          class="small-button"
-          onclick="deleteTask('${task.id}')"
-        >
-          ×
-        </button>
+
+        <div class="task-actions">
+
+          <button
+            class="small-button"
+            onclick="editTask('${task.id}')"
+          >
+            ✎
+          </button>
+
+          <button
+            class="small-button"
+            onclick="deleteTask('${task.id}')"
+          >
+            ×
+          </button>
+
+        </div>
 
       </div>
 
     `;
 
   });
+
+
+  if (!html) {
+
+    html =
+      `<div class="empty">
+        No tasks yet. You're all caught up.
+      </div>`;
+
+  }
 
 
   appContent.innerHTML = `
@@ -707,11 +881,12 @@ function renderTasks() {
 
       </div>
 
+
       <button
         class="add-button"
         onclick="openTaskModal()"
       >
-        + Add Task
+        + Add task
       </button>
 
     </div>
@@ -721,12 +896,7 @@ function renderTasks() {
 
       <div class="item-list">
 
-        ${
-          html ||
-          emptyMessage(
-            "No tasks yet. You're all caught up! ✨"
-          )
-        }
+        ${html}
 
       </div>
 
@@ -741,15 +911,16 @@ function toggleTask(id) {
 
   const task =
     tasks.find(
-      item => item.id === id
+      task => task.id === id
     );
 
-  if (!task) {
-    return;
-  }
+
+  if (!task) return;
+
 
   task.completed =
     !task.completed;
+
 
   saveData();
 
@@ -765,11 +936,245 @@ function deleteTask(id) {
       task => task.id !== id
     );
 
+
   saveData();
 
   renderTasks();
 
 }
+
+
+/* =========================
+   TASK MODAL
+========================= */
+
+let editingTaskId = null;
+
+
+function openTaskModal(taskId = null) {
+
+  const modal =
+    document.getElementById(
+      "task-modal"
+    );
+
+
+  editingTaskId =
+    taskId;
+
+
+  if (taskId) {
+
+    const task =
+      tasks.find(
+        task => task.id === taskId
+      );
+
+
+    if (!task) return;
+
+
+    document.getElementById(
+      "task-type"
+    ).value = task.type;
+
+
+    document.getElementById(
+      "task-subject"
+    ).value = task.subject || "";
+
+
+    document.getElementById(
+      "task-name"
+    ).value = task.name;
+
+
+    document.getElementById(
+      "task-due"
+    ).value = task.due;
+
+
+    document.getElementById(
+      "task-time"
+    ).value = task.time;
+
+  } else {
+
+    document
+      .getElementById("task-form")
+      .reset();
+
+
+    document.getElementById(
+      "task-due"
+    ).value = todayString();
+
+  }
+
+
+  modal.classList.remove("hidden");
+
+}
+
+
+function editTask(id) {
+
+  openTaskModal(id);
+
+}
+
+
+function closeTaskModal() {
+
+  document
+    .getElementById("task-modal")
+    .classList.add("hidden");
+
+  editingTaskId = null;
+
+}
+
+
+document
+  .getElementById("close-task-modal")
+  .addEventListener(
+    "click",
+    closeTaskModal
+  );
+
+
+document
+  .getElementById("cancel-task")
+  .addEventListener(
+    "click",
+    closeTaskModal
+  );
+
+
+document
+  .getElementById("task-type")
+  .addEventListener(
+    "change",
+    event => {
+
+      const subjectField =
+        document.getElementById(
+          "subject-field"
+        );
+
+
+      const subject =
+        document.getElementById(
+          "task-subject"
+        );
+
+
+      if (
+        event.target.value === "other"
+      ) {
+
+        subjectField.style.display =
+          "none";
+
+        subject.required = false;
+
+        subject.value = "";
+
+      } else {
+
+        subjectField.style.display =
+          "flex";
+
+        subject.required = true;
+
+      }
+
+    }
+  );
+
+
+document
+  .getElementById("task-form")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const taskData = {
+
+        id:
+          editingTaskId ||
+          Date.now().toString(),
+
+        type:
+          document.getElementById(
+            "task-type"
+          ).value,
+
+        subject:
+          document.getElementById(
+            "task-subject"
+          ).value,
+
+        name:
+          document.getElementById(
+            "task-name"
+          ).value,
+
+        due:
+          document.getElementById(
+            "task-due"
+          ).value,
+
+        time:
+          Number(
+            document.getElementById(
+              "task-time"
+            ).value
+          )
+
+      };
+
+
+      if (editingTaskId) {
+
+        const index =
+          tasks.findIndex(
+            task =>
+              task.id === editingTaskId
+          );
+
+
+        if (index !== -1) {
+
+          taskData.completed =
+            tasks[index].completed;
+
+          tasks[index] =
+            taskData;
+
+        }
+
+      } else {
+
+        taskData.completed =
+          false;
+
+        tasks.push(taskData);
+
+      }
+
+
+      saveData();
+
+      closeTaskModal();
+
+      showPage("tasks");
+
+    }
+  );
 
 
 /* =========================
@@ -796,29 +1201,18 @@ function renderTests() {
 
 
     let countdown =
-      "";
+      `${days} days left`;
 
+    if (days === 0) {
+      countdown = "Today";
+    }
+
+    if (days === 1) {
+      countdown = "Tomorrow";
+    }
 
     if (days < 0) {
-
-      countdown =
-        "Past";
-
-    } else if (days === 0) {
-
-      countdown =
-        "Today";
-
-    } else if (days === 1) {
-
-      countdown =
-        "Tomorrow";
-
-    } else {
-
-      countdown =
-        `In ${days} days`;
-
+      countdown = "Past";
     }
 
 
@@ -829,27 +1223,30 @@ function renderTests() {
         <div class="item-main">
 
           <div class="item-title">
-            ${escapeHTML(test.topic)}
+
+            ${test.subject}
+
+            <span class="badge">
+              ${test.time} min study
+            </span>
+
           </div>
+
 
           <div class="item-meta">
 
-            <span class="badge">
-              ${escapeHTML(test.subject)}
-            </span>
+            ${test.topic}
 
-            ${formatDate(test.date)}
-
-            · Study:
-            ${test.time} min
+            · ${formatDate(test.date)}
 
           </div>
+
 
           ${
             test.notes
               ? `
                 <div class="test-notes">
-                  ${escapeHTML(test.notes)}
+                  ${test.notes}
                 </div>
               `
               : ""
@@ -857,22 +1254,45 @@ function renderTests() {
 
         </div>
 
+
         <div class="countdown">
           ${countdown}
         </div>
 
-        <button
-          class="small-button"
-          onclick="deleteTest('${test.id}')"
-        >
-          ×
-        </button>
+
+        <div class="test-actions">
+
+          <button
+            class="small-button"
+            onclick="editTest('${test.id}')"
+          >
+            ✎
+          </button>
+
+          <button
+            class="small-button"
+            onclick="deleteTest('${test.id}')"
+          >
+            ×
+          </button>
+
+        </div>
 
       </div>
 
     `;
 
   });
+
+
+  if (!html) {
+
+    html =
+      `<div class="empty">
+        No tests added yet.
+      </div>`;
+
+  }
 
 
   appContent.innerHTML = `
@@ -886,16 +1306,17 @@ function renderTests() {
         </h1>
 
         <p class="page-description">
-          Never get surprised by a test again.
+          Upcoming tests, topics and study time.
         </p>
 
       </div>
+
 
       <button
         class="add-button"
         onclick="openTestModal()"
       >
-        + Add Test
+        + Add test
       </button>
 
     </div>
@@ -905,18 +1326,90 @@ function renderTests() {
 
       <div class="item-list">
 
-        ${
-          html ||
-          emptyMessage(
-            "No upcoming tests. 🎉"
-          )
-        }
+        ${html}
 
       </div>
 
     </section>
 
   `;
+
+}
+
+
+let editingTestId = null;
+
+
+function openTestModal(testId = null) {
+
+  const modal =
+    document.getElementById(
+      "test-modal"
+    );
+
+
+  editingTestId =
+    testId;
+
+
+  if (testId) {
+
+    const test =
+      tests.find(
+        test => test.id === testId
+      );
+
+
+    if (!test) return;
+
+
+    document.getElementById(
+      "test-subject"
+    ).value = test.subject;
+
+
+    document.getElementById(
+      "test-topic"
+    ).value = test.topic;
+
+
+    document.getElementById(
+      "test-date"
+    ).value = test.date;
+
+
+    document.getElementById(
+      "test-time"
+    ).value = test.time;
+
+
+    document.getElementById(
+      "test-notes"
+    ).value = test.notes || "";
+
+
+  } else {
+
+    document
+      .getElementById("test-form")
+      .reset();
+
+
+    document.getElementById(
+      "test-date"
+    ).value = todayString();
+
+  }
+
+
+  modal.classList.remove("hidden");
+
+}
+
+
+function editTest(id) {
+
+  openTestModal(id);
 
 }
 
@@ -928,11 +1421,122 @@ function deleteTest(id) {
       test => test.id !== id
     );
 
+
   saveData();
 
   renderTests();
 
 }
+
+
+function closeTestModal() {
+
+  document
+    .getElementById("test-modal")
+    .classList.add("hidden");
+
+  editingTestId = null;
+
+}
+
+
+document
+  .getElementById("close-test-modal")
+  .addEventListener(
+    "click",
+    closeTestModal
+  );
+
+
+document
+  .getElementById("cancel-test")
+  .addEventListener(
+    "click",
+    closeTestModal
+  );
+
+
+document
+  .getElementById("test-form")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const testData = {
+
+        id:
+          editingTestId ||
+          Date.now().toString(),
+
+        subject:
+          document.getElementById(
+            "test-subject"
+          ).value,
+
+        topic:
+          document.getElementById(
+            "test-topic"
+          ).value,
+
+        date:
+          document.getElementById(
+            "test-date"
+          ).value,
+
+        time:
+          Number(
+            document.getElementById(
+              "test-time"
+            ).value
+          ),
+
+        notes:
+          document.getElementById(
+            "test-notes"
+          ).value,
+
+        completed: false
+
+      };
+
+
+      if (editingTestId) {
+
+        const index =
+          tests.findIndex(
+            test =>
+              test.id === editingTestId
+          );
+
+
+        if (index !== -1) {
+
+          tests[index] =
+            {
+              ...tests[index],
+              ...testData
+            };
+
+        }
+
+      } else {
+
+        tests.push(testData);
+
+      }
+
+
+      saveData();
+
+      closeTestModal();
+
+      showPage("tests");
+
+    }
+  );
 
 
 /* =========================
@@ -957,7 +1561,15 @@ function renderCalendar() {
       year,
       month,
       1
-    ).getDay();
+    );
+
+
+  let startDay =
+    firstDay.getDay();
+
+  if (startDay === 0) {
+    startDay = 7;
+  }
 
 
   const daysInMonth =
@@ -968,18 +1580,22 @@ function renderCalendar() {
     ).getDate();
 
 
-  const offset =
-    firstDay === 0
-      ? 6
-      : firstDay - 1;
+  const monthName =
+    calendarDate.toLocaleDateString(
+      "en-GB",
+      {
+        month: "long",
+        year: "numeric"
+      }
+    );
 
 
   let cells = "";
 
 
   for (
-    let i = 0;
-    i < offset;
+    let i = 1;
+    i < startDay;
     i++
   ) {
 
@@ -996,25 +1612,44 @@ function renderCalendar() {
     day++
   ) {
 
-    const dateString =
-      `${year}-${String(
-        month + 1
-      ).padStart(2, "0")}-${String(
+    const date =
+      new Date(
+        year,
+        month,
         day
-      ).padStart(2, "0")}`;
+      );
 
 
-    const today =
-      new Date();
+    const dateString =
+      date.toISOString()
+        .split("T")[0];
 
 
     const isToday =
-      day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear();
+      dateString === todayString();
 
 
-    let eventsHTML = "";
+    let dayEvents = "";
+
+
+    events
+      .filter(
+        event =>
+          event.date === dateString
+      )
+      .forEach(event => {
+
+        dayEvents += `
+
+          <div class="calendar-event calendar-personal">
+
+            ${event.name}
+
+          </div>
+
+        `;
+
+      });
 
 
     tasks
@@ -1024,10 +1659,14 @@ function renderCalendar() {
       )
       .forEach(task => {
 
-        eventsHTML += `
+        dayEvents += `
+
           <div class="calendar-event calendar-task">
-            ${escapeHTML(task.name)}
+
+            ✓ ${task.name}
+
           </div>
+
         `;
 
       });
@@ -1040,26 +1679,14 @@ function renderCalendar() {
       )
       .forEach(test => {
 
-        eventsHTML += `
+        dayEvents += `
+
           <div class="calendar-event calendar-test">
-            Test: ${escapeHTML(test.subject)}
+
+            🧪 ${test.subject}
+
           </div>
-        `;
 
-      });
-
-
-    events
-      .filter(
-        event =>
-          event.date === dateString
-      )
-      .forEach(event => {
-
-        eventsHTML += `
-          <div class="calendar-event calendar-personal">
-            ${escapeHTML(event.name)}
-          </div>
         `;
 
       });
@@ -1068,15 +1695,17 @@ function renderCalendar() {
     cells += `
 
       <div
-        class="calendar-day
-        ${isToday ? "today" : ""}"
+        class="
+          calendar-day
+          ${isToday ? "today" : ""}
+        "
       >
 
         <div class="calendar-day-number">
           ${day}
         </div>
 
-        ${eventsHTML}
+        ${dayEvents}
 
       </div>
 
@@ -1096,16 +1725,17 @@ function renderCalendar() {
         </h1>
 
         <p class="page-description">
-          Your tasks, tests and events together.
+          Tasks, tests and everything else in one place.
         </p>
 
       </div>
+
 
       <button
         class="add-button"
         onclick="openEventModal()"
       >
-        + Add Event
+        + Add event
       </button>
 
     </div>
@@ -1122,15 +1752,11 @@ function renderCalendar() {
           ‹
         </button>
 
+
         <h3>
-          ${calendarDate.toLocaleDateString(
-            "en-GB",
-            {
-              month: "long",
-              year: "numeric"
-            }
-          )}
+          ${monthName}
         </h3>
+
 
         <button
           class="calendar-arrow"
@@ -1177,6 +1803,101 @@ function changeMonth(amount) {
   renderCalendar();
 
 }
+
+
+/* =========================
+   EVENT MODAL
+========================= */
+
+function openEventModal() {
+
+  document
+    .getElementById("event-form")
+    .reset();
+
+
+  document.getElementById(
+    "event-date"
+  ).value = todayString();
+
+
+  document
+    .getElementById("event-modal")
+    .classList.remove("hidden");
+
+}
+
+
+function closeEventModal() {
+
+  document
+    .getElementById("event-modal")
+    .classList.add("hidden");
+
+}
+
+
+document
+  .getElementById("close-event-modal")
+  .addEventListener(
+    "click",
+    closeEventModal
+  );
+
+
+document
+  .getElementById("cancel-event")
+  .addEventListener(
+    "click",
+    closeEventModal
+  );
+
+
+document
+  .getElementById("event-form")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      events.push({
+
+        id:
+          Date.now().toString(),
+
+        name:
+          document.getElementById(
+            "event-name"
+          ).value,
+
+        date:
+          document.getElementById(
+            "event-date"
+          ).value,
+
+        start:
+          document.getElementById(
+            "event-start"
+          ).value,
+
+        end:
+          document.getElementById(
+            "event-end"
+          ).value
+
+      });
+
+
+      saveData();
+
+      closeEventModal();
+
+      showPage("calendar");
+
+    }
+  );
 
 
 /* =========================
@@ -1231,11 +1952,6 @@ function renderTimetable() {
           times[index + 1];
 
 
-        if (!time) {
-          return;
-        }
-
-
         html += `
 
           <div class="schedule-row">
@@ -1244,12 +1960,14 @@ function renderTimetable() {
               ${time[1]}–${time[2]}
             </div>
 
-            <div class="
-              schedule-subject
-              ${subject === "Free" ? "free" : ""}
-            ">
+            <div
+              class="
+                schedule-subject
+                ${subject === "Free" ? "free" : ""}
+              "
+            >
 
-              ${escapeHTML(subject)}
+              ${subject}
 
             </div>
 
@@ -1294,7 +2012,7 @@ function renderSubjects() {
       <div class="subject-card">
 
         <strong>
-          ${escapeHTML(subject)}
+          ${subject}
         </strong>
 
         <p>
@@ -1310,15 +2028,24 @@ function renderSubjects() {
 
   appContent.innerHTML = `
 
+    <div class="page-header">
+
+      <div>
+
+        <h1>
+          Subjects
+        </h1>
+
+        <p class="page-description">
+          Your school subjects.
+        </p>
+
+      </div>
+
+    </div>
+
+
     <section class="card">
-
-      <h2>
-        Subjects
-      </h2>
-
-      <p class="card-subtitle">
-        Your school subjects.
-      </p>
 
       <div class="subject-grid">
 
@@ -1334,355 +2061,69 @@ function renderSubjects() {
 
 
 /* =========================
-   TASK MODAL
+   NAVIGATION
 ========================= */
 
-function openTaskModal() {
+function setActive(page) {
 
-  document
-    .getElementById("task-modal")
-    .classList.remove("hidden");
+  navButtons.forEach(button => {
 
-}
-
-
-function closeTaskModal() {
-
-  document
-    .getElementById("task-modal")
-    .classList.add("hidden");
-
-}
-
-
-document
-  .getElementById("close-task-modal")
-  .addEventListener(
-    "click",
-    closeTaskModal
-  );
-
-
-document
-  .getElementById("cancel-task")
-  .addEventListener(
-    "click",
-    closeTaskModal
-  );
-
-
-document
-  .getElementById("task-type")
-  .addEventListener(
-    "change",
-    event => {
-
-      const subjectField =
-        document.getElementById(
-          "subject-field"
-        );
-
-      const subject =
-        document.getElementById(
-          "task-subject"
-        );
-
-
-      if (
-        event.target.value === "other"
-      ) {
-
-        subjectField.style.display =
-          "none";
-
-        subject.required =
-          false;
-
-        subject.value =
-          "";
-
-      } else {
-
-        subjectField.style.display =
-          "flex";
-
-        subject.required =
-          true;
-
-      }
-
-    }
-  );
-
-
-document
-  .getElementById("task-form")
-  .addEventListener(
-    "submit",
-    event => {
-
-      event.preventDefault();
-
-
-      const task = {
-
-        id:
-          Date.now().toString(),
-
-        type:
-          document.getElementById(
-            "task-type"
-          ).value,
-
-        subject:
-          document.getElementById(
-            "task-subject"
-          ).value,
-
-        name:
-          document.getElementById(
-            "task-name"
-          ).value,
-
-        due:
-          document.getElementById(
-            "task-due"
-          ).value,
-
-        time:
-          document.getElementById(
-            "task-time"
-          ).value,
-
-        completed:
-          false
-
-      };
-
-
-      tasks.push(task);
-
-      saveData();
-
-      event.target.reset();
-
-      closeTaskModal();
-
-      showPage("tasks");
-
-    }
-  );
-
-
-/* =========================
-   TEST MODAL
-========================= */
-
-function openTestModal() {
-
-  document
-    .getElementById("test-modal")
-    .classList.remove("hidden");
-
-}
-
-
-function closeTestModal() {
-
-  document
-    .getElementById("test-modal")
-    .classList.add("hidden");
-
-}
-
-
-document
-  .getElementById("close-test-modal")
-  .addEventListener(
-    "click",
-    closeTestModal
-  );
-
-
-document
-  .getElementById("cancel-test")
-  .addEventListener(
-    "click",
-    closeTestModal
-  );
-
-
-document
-  .getElementById("test-form")
-  .addEventListener(
-    "submit",
-    event => {
-
-      event.preventDefault();
-
-
-      const test = {
-
-        id:
-          Date.now().toString(),
-
-        subject:
-          document.getElementById(
-            "test-subject"
-          ).value,
-
-        topic:
-          document.getElementById(
-            "test-topic"
-          ).value,
-
-        date:
-          document.getElementById(
-            "test-date"
-          ).value,
-
-        time:
-          document.getElementById(
-            "test-time"
-          ).value,
-
-        notes:
-          document.getElementById(
-            "test-notes"
-          ).value
-
-      };
-
-
-      tests.push(test);
-
-      saveData();
-
-      event.target.reset();
-
-      closeTestModal();
-
-      showPage("tests");
-
-    }
-  );
-
-
-/* =========================
-   EVENT MODAL
-========================= */
-
-function openEventModal() {
-
-  document
-    .getElementById("event-modal")
-    .classList.remove("hidden");
-
-}
-
-
-function closeEventModal() {
-
-  document
-    .getElementById("event-modal")
-    .classList.add("hidden");
-
-}
-
-
-document
-  .getElementById("close-event-modal")
-  .addEventListener(
-    "click",
-    closeEventModal
-  );
-
-
-document
-  .getElementById("cancel-event")
-  .addEventListener(
-    "click",
-    closeEventModal
-  );
-
-
-document
-  .getElementById("event-form")
-  .addEventListener(
-    "submit",
-    event => {
-
-      event.preventDefault();
-
-
-      const newEvent = {
-
-        id:
-          Date.now().toString(),
-
-        name:
-          document.getElementById(
-            "event-name"
-          ).value,
-
-        date:
-          document.getElementById(
-            "event-date"
-          ).value,
-
-        start:
-          document.getElementById(
-            "event-start"
-          ).value,
-
-        end:
-          document.getElementById(
-            "event-end"
-          ).value
-
-      };
-
-
-      events.push(newEvent);
-
-      saveData();
-
-      event.target.reset();
-
-      closeEventModal();
-
-      showPage("calendar");
-
-    }
-  );
-
-
-/* =========================
-   CLOSE MODAL ON BACKDROP
-========================= */
-
-document
-  .querySelectorAll(".modal")
-  .forEach(modal => {
-
-    modal.addEventListener(
-      "click",
-      event => {
-
-        if (
-          event.target === modal
-        ) {
-
-          modal.classList.add(
-            "hidden"
-          );
-
-        }
-
-      }
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
     );
 
   });
+
+}
+
+
+function showPage(page) {
+
+  setActive(page);
+
+
+  if (page === "home") {
+    renderHome();
+  }
+
+  if (page === "tasks") {
+    renderTasks();
+  }
+
+  if (page === "tests") {
+    renderTests();
+  }
+
+  if (page === "calendar") {
+    renderCalendar();
+  }
+
+  if (page === "timetable") {
+    renderTimetable();
+  }
+
+  if (page === "subjects") {
+    renderSubjects();
+  }
+
+}
+
+
+navButtons.forEach(button => {
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      showPage(
+        button.dataset.page
+      );
+
+    }
+  );
+
+});
 
 
 /* =========================
