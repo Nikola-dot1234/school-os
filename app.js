@@ -1632,25 +1632,99 @@ function renderCalendar() {
     let dayEvents = "";
 
 
-    events
-      .filter(
-        event =>
-          event.date === dateString
-      )
-      .forEach(event => {
+   events.forEach(event => {
 
-        dayEvents += `
+  const eventDate =
+    new Date(
+      event.date + "T00:00:00"
+    );
 
-          <div class="calendar-event calendar-personal">
+  const currentDate =
+    new Date(
+      dateString + "T00:00:00"
+    );
 
-            ${event.name}
 
-          </div>
+  let shouldShow = false;
 
-        `;
 
-      });
+  if (event.repeat === "weekly") {
 
+    const difference =
+      Math.round(
+        (
+          currentDate -
+          eventDate
+        ) /
+        (1000 * 60 * 60 * 24)
+      );
+
+
+    shouldShow =
+      difference >= 0 &&
+      difference % 7 === 0;
+
+  }
+
+
+  else if (event.repeat === "biweekly") {
+
+    const difference =
+      Math.round(
+        (
+          currentDate -
+          eventDate
+        ) /
+        (1000 * 60 * 60 * 24)
+      );
+
+
+    shouldShow =
+      difference >= 0 &&
+      difference % 14 === 0;
+
+  }
+
+
+  else if (event.repeat === "monthly") {
+
+    shouldShow =
+      currentDate >= eventDate &&
+      currentDate.getDate() ===
+      eventDate.getDate();
+
+  }
+
+
+  else {
+
+    shouldShow =
+      event.date === dateString;
+
+  }
+
+
+  if (shouldShow) {
+
+    dayEvents += `
+
+      <div class="calendar-event calendar-personal">
+
+        ${event.name}
+
+        ${
+          event.start
+            ? `<br>${event.start}–${event.end}`
+            : ""
+        }
+
+      </div>
+
+    `;
+
+  }
+
+});
 
     tasks
       .filter(
@@ -1861,35 +1935,37 @@ document
 
       event.preventDefault();
 
+       events.push({
 
-      events.push({
+  id:
+    Date.now().toString(),
 
-        id:
-          Date.now().toString(),
+  name:
+    document.getElementById(
+      "event-name"
+    ).value,
 
-        name:
-          document.getElementById(
-            "event-name"
-          ).value,
+  date:
+    document.getElementById(
+      "event-date"
+    ).value,
 
-        date:
-          document.getElementById(
-            "event-date"
-          ).value,
+  start:
+    document.getElementById(
+      "event-start"
+    ).value,
 
-        start:
-          document.getElementById(
-            "event-start"
-          ).value,
+  end:
+    document.getElementById(
+      "event-end"
+    ).value,
 
-        end:
-          document.getElementById(
-            "event-end"
-          ).value
+  repeat:
+    document.getElementById(
+      "event-repeat"
+    ).value
 
-      });
-
-
+});
       saveData();
 
       closeEventModal();
