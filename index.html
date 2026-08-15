@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School OS</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="app">
+
+    <header class="topbar">
+
+      <div class="brand">
+
+        <div class="brand-mark">
+          S
+        </div>
+
+        <div>
+          <div class="brand-name">
+            School OS
+          </div>
+
+          <div class="brand-subtitle">
+            your school, organized
+          </div>
+        </div>
+
+      </div>
+
+
+      <nav class="nav">
+
+        <button class="nav-button active" data-page="home">
+          Home
+        </button>
+
+        <button class="nav-button" data-page="calendar">
+          Calendar
+        </button>
+
+        <button class="nav-button" data-page="tasks">
+          Tasks
+        </button>
+
+        <button class="nav-button" data-page="tests">
+          Tests
+        </button>
+
+        <button class="nav-button" data-page="timetable">
+          Timetable
+        </button>
+
+        <button class="nav-button" data-page="subjects">
+          Subjects
+        </button>
+
+      </nav>
+
+    </header>
+
+
+    <main id="app-content"></main>
+
+  </div>
+
+
+
+  <!-- =========================
+       TASK MODAL
+  ========================== -->
+
+  <div id="task-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+
+        <div>
+
+          <h2>
+            Add Task
+          </h2>
+
+          <p>
+            Add something you need to get done.
+          </p>
+
+        </div>
+
+        <button
+          class="close-button"
+          id="close-task-modal"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form id="task-form">
+
+        <label>
+
+          Type
+
+          <select id="task-type" required>
+
+            <option value="homework">
+              Homework
+            </option>
+
+            <option value="study">
+              Study
+            </option>
+
+            <option value="other">
+              Other
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label id="subject-field">
+
+          Subject
+
+          <select id="task-subject">
+
+            <option value="">
+              Select subject
+            </option>
+
+            <option>
+              Dějepis
+            </option>
+
+            <option>
+              History
+            </option>
+
+            <option>
+              Class Teacher Hour
+            </option>
+
+            <option>
+              ZSV
+            </option>
+
+            <option>
+              Mathematics
+            </option>
+
+            <option>
+              Czech
+            </option>
+
+            <option>
+              French
+            </option>
+
+            <option>
+              English
+            </option>
+
+            <option>
+              Geography
+            </option>
+
+            <option>
+              Physics
+            </option>
+
+            <option>
+              Chemistry
+            </option>
+
+            <option>
+              Biology
+            </option>
+
+            <option>
+              Integrated Science
+            </option>
+
+            <option>
+              ICT
+            </option>
+
+            <option>
+              PE
+            </option>
+
+            <option>
+              Economics / Business / Finance
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+
+          Task
+
+          <input
+            id="task-name"
+            type="text"
+            placeholder="What do you need to do?"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          Due
+
+          <input
+            id="task-due"
+            type="date"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          Estimated time
+
+          <select id="task-time">
+
+            <option value="15">
+              15 min
+            </option>
+
+            <option value="30">
+              30 min
+            </option>
+
+            <option value="45">
+              45 min
+            </option>
+
+            <option value="60">
+              1 hour
+            </option>
+
+            <option value="90">
+              1.5 hours
+            </option>
+
+            <option value="120">
+              2 hours
+            </option>
+
+            <option value="180">
+              3 hours
+            </option>
+
+            <option value="240">
+              4 hours
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="cancel-button"
+            id="cancel-task"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="save-button"
+          >
+            Save Task
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =========================
+       TEST MODAL
+  ========================== -->
+
+  <div id="test-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+
+        <div>
+
+          <h2>
+            Add Test
+          </h2>
+
+          <p>
+            Keep track of your upcoming tests.
+          </p>
+
+        </div>
+
+        <button
+          class="close-button"
+          id="close-test-modal"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form id="test-form">
+
+        <label>
+
+          Subject
+
+          <select
+            id="test-subject"
+            required
+          >
+
+            <option value="">
+              Select subject
+            </option>
+
+            <option>
+              Dějepis
+            </option>
+
+            <option>
+              History
+            </option>
+
+            <option>
+              ZSV
+            </option>
+
+            <option>
+              Mathematics
+            </option>
+
+            <option>
+              Czech
+            </option>
+
+            <option>
+              French
+            </option>
+
+            <option>
+              English
+            </option>
+
+            <option>
+              Geography
+            </option>
+
+            <option>
+              Physics
+            </option>
+
+            <option>
+              Chemistry
+            </option>
+
+            <option>
+              Biology
+            </option>
+
+            <option>
+              Integrated Science
+            </option>
+
+            <option>
+              ICT
+            </option>
+
+            <option>
+              PE
+            </option>
+
+            <option>
+              Economics / Business / Finance
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+
+          Topic
+
+          <input
+            id="test-topic"
+            type="text"
+            placeholder="What is the test about?"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          Test date
+
+          <input
+            id="test-date"
+            type="date"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          Study time
+
+          <select id="test-time">
+
+            <option value="30">
+              30 min
+            </option>
+
+            <option value="60">
+              1 hour
+            </option>
+
+            <option value="90">
+              1.5 hours
+            </option>
+
+            <option value="120">
+              2 hours
+            </option>
+
+            <option value="180">
+              3 hours
+            </option>
+
+            <option value="240">
+              4 hours
+            </option>
+
+            <option value="300">
+              5 hours
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+
+          Notes
+
+          <textarea
+            id="test-notes"
+            rows="4"
+            placeholder="What do you need to remember?"
+          ></textarea>
+
+        </label>
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="cancel-button"
+            id="cancel-test"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="save-button"
+          >
+            Save Test
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- =========================
+       EVENT MODAL
+  ========================== -->
+
+  <div id="event-modal" class="modal hidden">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+
+        <div>
+
+          <h2>
+            Add Event
+          </h2>
+
+          <p>
+            Add school, personal or extracurricular activities.
+          </p>
+
+        </div>
+
+        <button
+          class="close-button"
+          id="close-event-modal"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form id="event-form">
+
+        <label>
+
+          Event
+
+          <input
+            id="event-name"
+            type="text"
+            placeholder="e.g. Gymnastics"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          Date
+
+          <input
+            id="event-date"
+            type="date"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          Start
+
+          <input
+            id="event-start"
+            type="time"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          End
+
+          <input
+            id="event-end"
+            type="time"
+            required
+          >
+
+        </label>
+
+
+        <div class="modal-actions">
+
+          <button
+            type="button"
+            class="cancel-button"
+            id="cancel-event"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="save-button"
+          >
+            Save Event
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+
+  <script src="app.js"></script>
+
+</body>
+</html>
